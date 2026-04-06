@@ -56,6 +56,8 @@ class DefaultFirebaseOptions {
     projectId: 'nsbm-smart-faculty',
     authDomain: 'nsbm-smart-faculty.firebaseapp.com',
     storageBucket: 'nsbm-smart-faculty.firebasestorage.app',
+    databaseURL:
+        'https://nsbm-smart-faculty-default-rtdb.asia-southeast1.firebasedatabase.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -64,5 +66,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1016503962997',
     projectId: 'nsbm-smart-faculty',
     storageBucket: 'nsbm-smart-faculty.firebasestorage.app',
+    databaseURL:
+        'https://nsbm-smart-faculty-default-rtdb.asia-southeast1.firebasedatabase.app',
   );
 }

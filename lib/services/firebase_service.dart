@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +8,14 @@ import '../models/hall_status.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseDatabase _database = FirebaseDatabase.instance;
+
+  // ─── Fix: specify correct regional database URL ────────────────
+  final FirebaseDatabase _database = FirebaseDatabase.instanceFor(
+    app: Firebase.app(),
+    databaseURL:
+        'https://nsbm-smart-faculty-default-rtdb.asia-southeast1.firebasedatabase.app',
+  );
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // ─── Singleton ─────────────────────────────────────────────────
@@ -40,7 +48,6 @@ class FirebaseService {
   // TIMETABLE (Firestore)
   // ══════════════════════════════════════════════════════════════
 
-  // ─── Get today's lectures for current lecturer ─────────────────
   Future<List<LectureSlot>> getTodayLectures() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return [];
@@ -48,7 +55,6 @@ class FirebaseService {
     final today = _getDayName(DateTime.now().weekday);
     final todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    // 1. Fetch base timetable for today
     final baseSnapshot = await _firestore
         .collection('timetable_base')
         .doc(today)
@@ -56,7 +62,6 @@ class FirebaseService {
         .orderBy('startTime')
         .get();
 
-    // 2. Filter only this lecturer's slots
     final baseSlots = baseSnapshot.docs
         .where((doc) => doc.data()['lecturerId'] == uid)
         .map((doc) => LectureSlot.fromBase(doc.data(), doc.id))
@@ -64,21 +69,17 @@ class FirebaseService {
 
     if (baseSlots.isEmpty) return [];
 
-    // 3. Fetch today's daily venue allocation
     final dailySnapshot = await _firestore
         .collection('timetable_daily')
         .doc(todayDate)
         .collection('slots')
         .get();
 
-    // Map daily slots by id for easy lookup
     final dailyMap = {for (var doc in dailySnapshot.docs) doc.id: doc.data()};
 
-    // 4. Merge base + daily venue info
     return baseSlots.map((slot) => slot.withVenue(dailyMap[slot.id])).toList();
   }
 
-  // ─── Get next lecture for current lecturer ─────────────────────
   Future<LectureSlot?> getNextLecture() async {
     final slots = await getTodayLectures();
     if (slots.isEmpty) return null;
@@ -116,6 +117,14 @@ class FirebaseService {
     });
   }
 
+  Stream<double> getHumidity() {
+    return _database.ref('lecture_hall/sensors/humidity').onValue.map((event) {
+      final value = event.snapshot.value;
+      if (value == null) return 0.0;
+      return (value as num).toDouble();
+    });
+  }
+
   Stream<int> getOccupancy() {
     return _database.ref('lecture_hall/sensors/occupancy').onValue.map((event) {
       final value = event.snapshot.value;
@@ -137,11 +146,21 @@ class FirebaseService {
   // ══════════════════════════════════════════════════════════════
 
   Future<void> setAC(bool value) async {
-    await _database.ref('lecture_hall/controls/ac_on').set(value);
+    try {
+      await _database.ref('lecture_hall/controls/ac_on').set(value);
+      print('AC set to: $value');
+    } catch (e) {
+      print('setAC error: $e');
+    }
   }
 
   Future<void> setLights(bool value) async {
-    await _database.ref('lecture_hall/controls/lights_on').set(value);
+    try {
+      await _database.ref('lecture_hall/controls/lights_on').set(value);
+      print('Lights set to: $value');
+    } catch (e) {
+      print('setLights error: $e');
+    }
   }
 
   Stream<bool> getACStatus() {
