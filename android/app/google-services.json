@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1016503962997",
+    "project_id": "nsbm-smart-faculty",
+    "storage_bucket": "nsbm-smart-faculty.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1016503962997:android:f8568f2c1c3b3d029e973c",
+        "android_client_info": {
+          "package_name": "com.example.iot_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlVHwb8YEAYqugz6T-RxQOS3ph3xqdtcM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
