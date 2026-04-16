@@ -9,7 +9,6 @@ import '../models/hall_status.dart';
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ─── Fix: specify correct regional database URL ────────────────
   final FirebaseDatabase _database = FirebaseDatabase.instanceFor(
     app: Firebase.app(),
     databaseURL:
@@ -133,11 +132,14 @@ class FirebaseService {
     });
   }
 
-  Stream<bool> getLightStatus() {
-    return _database.ref('lecture_hall/sensors/lights').onValue.map((event) {
+  Stream<double> getLightLevel() {
+    // Make sure the path matches your Firebase Realtime Database structure
+    return _database.ref('lecture_hall/sensors/light_level').onValue.map((
+      event,
+    ) {
       final value = event.snapshot.value;
-      if (value == null) return false;
-      return value as bool;
+      if (value == null) return 0.0;
+      return (value as num).toDouble();
     });
   }
 
@@ -145,23 +147,7 @@ class FirebaseService {
   // HALL CONTROLS (Realtime Database)
   // ══════════════════════════════════════════════════════════════
 
-  Future<void> setAC(bool value) async {
-    try {
-      await _database.ref('lecture_hall/controls/ac_on').set(value);
-      print('AC set to: $value');
-    } catch (e) {
-      print('setAC error: $e');
-    }
-  }
-
-  Future<void> setLights(bool value) async {
-    try {
-      await _database.ref('lecture_hall/controls/lights_on').set(value);
-      print('Lights set to: $value');
-    } catch (e) {
-      print('setLights error: $e');
-    }
-  }
+  // ─── AC ────────────────────────────────────────────────────────
 
   Stream<bool> getACStatus() {
     return _database.ref('lecture_hall/controls/ac_on').onValue.map((event) {
@@ -171,14 +157,76 @@ class FirebaseService {
     });
   }
 
-  Stream<bool> getLightsControlStatus() {
-    return _database.ref('lecture_hall/controls/lights_on').onValue.map((
+  Future<void> setAC(bool value) async {
+    try {
+      await _database.ref('lecture_hall/controls/ac_on').set(value);
+    } catch (e) {
+      print('setAC error: $e');
+    }
+  }
+
+  // ─── AC Temperature ────────────────────────────────────────────
+
+  Stream<int> getACTemperature() {
+    return _database.ref('lecture_hall/controls/ac_temperature').onValue.map((
+      event,
+    ) {
+      final value = event.snapshot.value;
+      if (value == null) return 22;
+      return (value as num).toInt();
+    });
+  }
+
+  Future<void> setACTemperature(int value) async {
+    try {
+      await _database.ref('lecture_hall/controls/ac_temperature').set(value);
+    } catch (e) {
+      print('setACTemperature error: $e');
+    }
+  }
+
+  // ─── Lights (4-channel relay) ──────────────────────────────────
+  // Paths: lecture_hall/controls/lights/channel1 … channel4
+
+  Stream<bool> getLightChannel(int channel) {
+    return _database
+        .ref('lecture_hall/controls/lights/channel$channel')
+        .onValue
+        .map((event) {
+          final value = event.snapshot.value;
+          if (value == null) return false;
+          return value as bool;
+        });
+  }
+
+  Future<void> setLightChannel(int channel, bool value) async {
+    try {
+      await _database
+          .ref('lecture_hall/controls/lights/channel$channel')
+          .set(value);
+    } catch (e) {
+      print('setLightChannel$channel error: $e');
+    }
+  }
+
+  // ─── Projector ─────────────────────────────────────────────────
+
+  Stream<bool> getProjectorStatus() {
+    return _database.ref('lecture_hall/controls/projector_on').onValue.map((
       event,
     ) {
       final value = event.snapshot.value;
       if (value == null) return false;
       return value as bool;
     });
+  }
+
+  Future<void> setProjector(bool value) async {
+    try {
+      await _database.ref('lecture_hall/controls/projector_on').set(value);
+    } catch (e) {
+      print('setProjector error: $e');
+    }
   }
 
   // ══════════════════════════════════════════════════════════════

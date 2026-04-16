@@ -273,6 +273,7 @@ class _NextLectureScreenState extends State<NextLectureScreen> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ─── Temperature ───────────────────────────────────────
           StreamBuilder<double>(
@@ -308,23 +309,101 @@ class _NextLectureScreenState extends State<NextLectureScreen> {
           ),
 
           _buildDivider(isDark),
+          const SizedBox(height: 12),
 
-          // ─── Lights Control ────────────────────────────────────
-          StreamBuilder<bool>(
-            stream: _firebaseService.getLightsControlStatus(),
-            builder: (context, snapshot) {
-              final isOn = snapshot.data ?? false;
-              return _buildControlRow(
-                icon: Icons.lightbulb_outline,
-                title: 'Lights',
-                subtitle: isOn ? 'Currently ON' : 'Currently OFF',
-                value: isOn,
-                isDark: isDark,
-                onChanged: (val) => _firebaseService.setLights(val),
+          // ─── Lights Control (4 Channels) ───────────────────────
+          Text(
+            'Lights',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 2.6,
+            children: List.generate(4, (i) {
+              final channel = i + 1;
+              return StreamBuilder<bool>(
+                stream: _firebaseService.getLightChannel(channel),
+                builder: (context, snapshot) {
+                  final isOn = snapshot.data ?? false;
+                  return GestureDetector(
+                    onTap: () =>
+                        _firebaseService.setLightChannel(channel, !isOn),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isOn
+                            ? (isDark
+                                  ? const Color(0xFF1A3A2A)
+                                  : const Color(0xFFE6F4EC))
+                            : (isDark ? const Color(0xFF3A3A3A) : Colors.white),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isOn ? Colors.green : Colors.transparent,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline,
+                            size: 18,
+                            color: isOn
+                                ? Colors.green
+                                : (isDark
+                                      ? Colors.grey[500]
+                                      : Colors.grey[500]),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Channel $channel',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? const Color(0xFFE0E0E0)
+                                        : const Color(0xFF1A1A1A),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isOn ? Colors.green : Colors.grey[400],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
-            },
+            }),
           ),
 
+          const SizedBox(height: 12),
           _buildDivider(isDark),
 
           // ─── Occupancy ─────────────────────────────────────────
