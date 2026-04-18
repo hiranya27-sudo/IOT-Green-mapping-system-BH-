@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 
+// ─── Light State Enum ──────────────────────────────────────────
+enum LightState { unknown, dark, natural, artificial }
+
 class CabinScreen extends StatefulWidget {
   const CabinScreen({super.key});
 
@@ -63,6 +66,7 @@ class _CabinScreenState extends State<CabinScreen> {
             _buildSectionLabel('Sensor Data', isDark),
             const SizedBox(height: 12),
 
+            // Temperature
             StreamBuilder<double>(
               stream: _firebaseService.getTemperature(),
               builder: (context, snapshot) {
@@ -81,7 +85,7 @@ class _CabinScreenState extends State<CabinScreen> {
 
             const SizedBox(height: 12),
 
-            // Add Humidity StreamBuilder here
+            // Humidity
             StreamBuilder<double>(
               stream: _firebaseService.getHumidity(),
               builder: (context, snapshot) {
@@ -91,7 +95,9 @@ class _CabinScreenState extends State<CabinScreen> {
                 return _buildSensorCard(
                   icon: Icons.water_drop_outlined,
                   title: 'Humidity',
-                  value: active ? '${humidity.toStringAsFixed(0)}%' : '—',
+                  value: active
+                      ? '${humidity.toStringAsFixed(0)}%'
+                      : '—',
                   subtitle: _getHumidityStatus(humidity),
                   isDark: isDark,
                 );
@@ -100,29 +106,38 @@ class _CabinScreenState extends State<CabinScreen> {
 
             const SizedBox(height: 12),
 
-            // Add LDR / Light Level StreamBuilder here
-            // Note: Since you didn't provide a getLightLevel() method in your
-            // FirebaseService previously, make sure to add it to firebase_service.dart
-            StreamBuilder<double>(
-              stream: _firebaseService.getLightLevel(),
-              builder: (context, snapshot) {
-                final lightLevel = snapshot.data ?? 0.0;
-                final active =
-                    snapshot.connectionState == ConnectionState.active;
-                return _buildSensorCard(
-                  icon: Icons.brightness_6_outlined,
-                  title: 'Ambient Light',
-                  value: active
-                      ? '${lightLevel.toStringAsFixed(0)} lx'
-                      : '—', // Adjust unit as needed (lx, %, etc.)
-                  subtitle: 'LDR Sensor Reading',
-                  isDark: isDark,
+            // Ambient Light (LDR + lights sensor combined)
+            StreamBuilder<bool>(
+              stream: _firebaseService.getLDRStatus(),
+              builder: (context, ldrSnapshot) {
+                return StreamBuilder<bool>(
+                  stream: _firebaseService.getLightSensorStatus(),
+                  builder: (context, lightsSnapshot) {
+                    final ldr = ldrSnapshot.data ?? false;
+                    final lights = lightsSnapshot.data ?? false;
+                    final isConnected =
+                        ldrSnapshot.connectionState == ConnectionState.active;
+
+                    final LightState state;
+                    if (!isConnected) {
+                      state = LightState.unknown;
+                    } else if (!ldr) {
+                      state = LightState.dark;
+                    } else if (ldr && lights) {
+                      state = LightState.artificial;
+                    } else {
+                      state = LightState.natural;
+                    }
+
+                    return _buildLightLevelCard(state, isDark);
+                  },
                 );
               },
             ),
 
             const SizedBox(height: 12),
 
+            // Occupancy
             StreamBuilder<int>(
               stream: _firebaseService.getOccupancy(),
               builder: (context, snapshot) {
@@ -198,7 +213,9 @@ class _CabinScreenState extends State<CabinScreen> {
                     ),
                     Icon(
                       Icons.chevron_right,
-                      color: isDark ? Colors.grey[600] : Colors.grey[400],
+                      color: isDark
+                          ? Colors.grey[600]
+                          : Colors.grey[400],
                     ),
                   ],
                 ),
@@ -212,13 +229,134 @@ class _CabinScreenState extends State<CabinScreen> {
     );
   }
 
+  // ─── Ambient Light Card ────────────────────────────────────────
+  Widget _buildLightLevelCard(LightState state, bool isDark) {
+    final String label;
+    final String subtitle;
+    final int filledBulbs;
+    final Color bulbColor;
+
+    switch (state) {
+      case LightState.dark:
+        label = 'Dark';
+        subtitle = 'No light detected';
+        filledBulbs = 0;
+        bulbColor = Colors.grey;
+        break;
+      case LightState.natural:
+        label = 'Natural Light';
+        subtitle = 'Ambient / window light';
+        filledBulbs = 1;
+        bulbColor = Colors.orange;
+        break;
+      case LightState.artificial:
+        label = 'Lights On';
+        subtitle = 'Artificial light detected';
+        filledBulbs = 3;
+        bulbColor = Colors.yellow[700]!;
+        break;
+      case LightState.unknown:
+        label = '—';
+        subtitle = 'Sensor connecting...';
+        filledBulbs = 0;
+        bulbColor = Colors.grey;
+        break;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF2C2C2C)
+            : const Color(0xFFF1F3F5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          // Icon box
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF3A3A3A) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.brightness_6_outlined,
+              size: 24,
+              color: isDark ? Colors.grey[400] : const Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Label + subtitle
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ambient Light',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? const Color(0xFFE0E0E0)
+                        : const Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          ),
+
+          // Bulb indicator + label
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: filledBulbs > 0 ? bulbColor : Colors.grey[500],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: List.generate(3, (i) {
+                  final filled = i < filledBulbs;
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Icon(
+                      filled
+                          ? Icons.lightbulb
+                          : Icons.lightbulb_outline,
+                      size: 20,
+                      color: filled ? bulbColor : Colors.grey[400],
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Lights Card (4 channels) ──────────────────────────────────
   Widget _buildLightsCard(bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
+        color: isDark
+            ? const Color(0xFF2C2C2C)
+            : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: GridView.count(
@@ -235,7 +373,8 @@ class _CabinScreenState extends State<CabinScreen> {
             builder: (context, snapshot) {
               final isOn = snapshot.data ?? false;
               return GestureDetector(
-                onTap: () => _firebaseService.setLightChannel(channel, !isOn),
+                onTap: () =>
+                    _firebaseService.setLightChannel(channel, !isOn),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -247,7 +386,9 @@ class _CabinScreenState extends State<CabinScreen> {
                         ? (isDark
                               ? const Color(0xFF1A3A2A)
                               : const Color(0xFFE6F4EC))
-                        : (isDark ? const Color(0xFF3A3A3A) : Colors.white),
+                        : (isDark
+                              ? const Color(0xFF3A3A3A)
+                              : Colors.white),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isOn ? Colors.green : Colors.transparent,
@@ -261,7 +402,9 @@ class _CabinScreenState extends State<CabinScreen> {
                         size: 18,
                         color: isOn
                             ? Colors.green
-                            : (isDark ? Colors.grey[500] : Colors.grey[500]),
+                            : (isDark
+                                  ? Colors.grey[500]
+                                  : Colors.grey[500]),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -291,7 +434,6 @@ class _CabinScreenState extends State<CabinScreen> {
                           ],
                         ),
                       ),
-                      // Status dot
                       Container(
                         width: 7,
                         height: 7,
@@ -311,18 +453,20 @@ class _CabinScreenState extends State<CabinScreen> {
     );
   }
 
-  // ─── AC Card (toggle + temperature dial) ──────────────────────
+  // ─── AC Card (toggle + temperature slider) ─────────────────────
   Widget _buildACCard(bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
+        color: isDark
+            ? const Color(0xFF2C2C2C)
+            : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          // On/Off toggle row
+          // On/Off toggle
           StreamBuilder<bool>(
             stream: _firebaseService.getACStatus(),
             builder: (context, snapshot) {
@@ -340,7 +484,7 @@ class _CabinScreenState extends State<CabinScreen> {
 
           _buildDivider(isDark),
 
-          // Temperature slider row
+          // Temperature slider
           StreamBuilder<int>(
             stream: _firebaseService.getACTemperature(),
             builder: (context, snapshot) {
@@ -422,27 +566,15 @@ class _CabinScreenState extends State<CabinScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '16°C',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                          Text(
-                            '23°C',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                          Text(
-                            '30°C',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey[500],
-                            ),
-                          ),
+                          Text('16°C',
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.grey[500])),
+                          Text('23°C',
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.grey[500])),
+                          Text('30°C',
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.grey[500])),
                         ],
                       ),
                     ),
@@ -462,7 +594,9 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
+        color: isDark
+            ? const Color(0xFF2C2C2C)
+            : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: StreamBuilder<bool>(
@@ -488,7 +622,9 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
+        color: isDark
+            ? const Color(0xFF2C2C2C)
+            : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -552,7 +688,9 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
+        color: isDark
+            ? const Color(0xFF2C2C2C)
+            : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -597,7 +735,9 @@ class _CabinScreenState extends State<CabinScreen> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1A1A1A),
+              color: isDark
+                  ? const Color(0xFFE0E0E0)
+                  : const Color(0xFF1A1A1A),
             ),
           ),
         ],
@@ -682,17 +822,17 @@ class _CabinScreenState extends State<CabinScreen> {
     return 'Too hot';
   }
 
-  String _getOccupancyStatus(int count) {
-    if (count == 0) return 'Hall is empty';
-    if (count <= 20) return 'Low occupancy';
-    if (count <= 60) return 'Moderate occupancy';
-    return 'High occupancy';
-  }
-
   String _getHumidityStatus(double humidity) {
     if (humidity == 0.0) return 'Sensor connecting...';
     if (humidity < 30) return 'Dry';
     if (humidity <= 60) return 'Optimal';
     return 'Humid';
+  }
+
+  String _getOccupancyStatus(int count) {
+    if (count == 0) return 'Hall is empty';
+    if (count <= 20) return 'Low occupancy';
+    if (count <= 60) return 'Moderate occupancy';
+    return 'High occupancy';
   }
 }

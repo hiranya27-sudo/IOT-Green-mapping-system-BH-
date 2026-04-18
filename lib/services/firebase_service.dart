@@ -107,9 +107,10 @@ class FirebaseService {
   }
 
   Stream<double> getTemperature() {
-    return _database.ref('lecture_hall/sensors/temperature').onValue.map((
-      event,
-    ) {
+    return _database
+        .ref('lecture_hall/sensors/temperature')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
       if (value == null) return 0.0;
       return (value as num).toDouble();
@@ -117,7 +118,10 @@ class FirebaseService {
   }
 
   Stream<double> getHumidity() {
-    return _database.ref('lecture_hall/sensors/humidity').onValue.map((event) {
+    return _database
+        .ref('lecture_hall/sensors/humidity')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
       if (value == null) return 0.0;
       return (value as num).toDouble();
@@ -125,21 +129,41 @@ class FirebaseService {
   }
 
   Stream<int> getOccupancy() {
-    return _database.ref('lecture_hall/sensors/occupancy').onValue.map((event) {
+    return _database
+        .ref('lecture_hall/sensors/occupancy')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
       if (value == null) return 0;
       return (value as num).toInt();
     });
   }
 
-  Stream<double> getLightLevel() {
-    // Make sure the path matches your Firebase Realtime Database structure
-    return _database.ref('lecture_hall/sensors/light_level').onValue.map((
-      event,
-    ) {
+  // ─── LDR (digital module — DO pin) ────────────────────────────
+  // true  = light detected
+  // false = dark
+
+  Stream<bool> getLDRStatus() {
+    return _database
+        .ref('lecture_hall/sensors/ldr')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
-      if (value == null) return 0.0;
-      return (value as num).toDouble();
+      if (value == null) return false;
+      return value as bool;
+    });
+  }
+
+  // ─── Lights sensor (physical relay state feedback) ─────────────
+
+  Stream<bool> getLightSensorStatus() {
+    return _database
+        .ref('lecture_hall/sensors/lights')
+        .onValue
+        .map((event) {
+      final value = event.snapshot.value;
+      if (value == null) return false;
+      return value as bool;
     });
   }
 
@@ -150,7 +174,10 @@ class FirebaseService {
   // ─── AC ────────────────────────────────────────────────────────
 
   Stream<bool> getACStatus() {
-    return _database.ref('lecture_hall/controls/ac_on').onValue.map((event) {
+    return _database
+        .ref('lecture_hall/controls/ac_on')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
       if (value == null) return false;
       return value as bool;
@@ -168,9 +195,10 @@ class FirebaseService {
   // ─── AC Temperature ────────────────────────────────────────────
 
   Stream<int> getACTemperature() {
-    return _database.ref('lecture_hall/controls/ac_temperature').onValue.map((
-      event,
-    ) {
+    return _database
+        .ref('lecture_hall/controls/ac_temperature')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
       if (value == null) return 22;
       return (value as num).toInt();
@@ -179,7 +207,9 @@ class FirebaseService {
 
   Future<void> setACTemperature(int value) async {
     try {
-      await _database.ref('lecture_hall/controls/ac_temperature').set(value);
+      await _database
+          .ref('lecture_hall/controls/ac_temperature')
+          .set(value);
     } catch (e) {
       print('setACTemperature error: $e');
     }
@@ -193,10 +223,10 @@ class FirebaseService {
         .ref('lecture_hall/controls/lights/channel$channel')
         .onValue
         .map((event) {
-          final value = event.snapshot.value;
-          if (value == null) return false;
-          return value as bool;
-        });
+      final value = event.snapshot.value;
+      if (value == null) return false;
+      return value as bool;
+    });
   }
 
   Future<void> setLightChannel(int channel, bool value) async {
@@ -212,9 +242,10 @@ class FirebaseService {
   // ─── Projector ─────────────────────────────────────────────────
 
   Stream<bool> getProjectorStatus() {
-    return _database.ref('lecture_hall/controls/projector_on').onValue.map((
-      event,
-    ) {
+    return _database
+        .ref('lecture_hall/controls/projector_on')
+        .onValue
+        .map((event) {
       final value = event.snapshot.value;
       if (value == null) return false;
       return value as bool;
@@ -223,7 +254,9 @@ class FirebaseService {
 
   Future<void> setProjector(bool value) async {
     try {
-      await _database.ref('lecture_hall/controls/projector_on').set(value);
+      await _database
+          .ref('lecture_hall/controls/projector_on')
+          .set(value);
     } catch (e) {
       print('setProjector error: $e');
     }

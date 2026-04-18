@@ -36,6 +36,12 @@ dependencies:
   firebase_database: ^11.1.4
   cloud_firestore: ^5.4.4
   firebase_storage: ^12.3.2
+  flutter_blue_plus: ^1.35.3
+  flutter_ble_peripheral: ^2.0.0
+
+  #mqtt
+  mqtt_client: ^10.0.0
+  
 
   # Utilities
   url_launcher: ^6.3.0

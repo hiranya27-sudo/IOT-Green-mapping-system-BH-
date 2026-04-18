@@ -11,6 +11,8 @@ import 'screens/map_screen.dart';
 import 'screens/cabin_screen.dart';
 import 'screens/timetable_screen.dart';
 import 'screens/next_lecture_screen.dart';
+import 'services/ble_advertiser.dart';
+import 'services/mqtt_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +25,9 @@ void main() async {
   } catch (e) {
     print('Firebase already initialized: $e');
   }
+
+  await BleAdvertiser.startAdvertising();
+  await MqttService.initialize();
 
   runApp(const SmartFacultyApp());
 }
