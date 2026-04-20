@@ -95,9 +95,7 @@ class _CabinScreenState extends State<CabinScreen> {
                 return _buildSensorCard(
                   icon: Icons.water_drop_outlined,
                   title: 'Humidity',
-                  value: active
-                      ? '${humidity.toStringAsFixed(0)}%'
-                      : '—',
+                  value: active ? '${humidity.toStringAsFixed(0)}%' : '—',
                   subtitle: _getHumidityStatus(humidity),
                   isDark: isDark,
                 );
@@ -157,21 +155,30 @@ class _CabinScreenState extends State<CabinScreen> {
             const SizedBox(height: 32),
 
             // ─── Lights ───────────────────────────────────────────
-            _buildSectionLabel('Lights — 4 Channel Relay', isDark),
+            _buildSectionLabel(
+              'Lights — Simulated from 4 Channel Relay',
+              isDark,
+            ),
             const SizedBox(height: 12),
             _buildLightsCard(isDark),
 
             const SizedBox(height: 32),
 
             // ─── Air Conditioner ──────────────────────────────────
-            _buildSectionLabel('Air Conditioner — Single Relay', isDark),
+            _buildSectionLabel(
+              'Air Conditioner — Simulated from Single Channel Relay',
+              isDark,
+            ),
             const SizedBox(height: 12),
             _buildACCard(isDark),
 
             const SizedBox(height: 32),
 
             // ─── Projector ────────────────────────────────────────
-            _buildSectionLabel('Projector — Single Relay', isDark),
+            _buildSectionLabel(
+              'Projector — Simulated from Single Channel Relay',
+              isDark,
+            ),
             const SizedBox(height: 12),
             _buildProjectorCard(isDark),
 
@@ -201,7 +208,7 @@ class _CabinScreenState extends State<CabinScreen> {
                     const SizedBox(width: 14),
                     Expanded(
                       child: Text(
-                        'View on Faculty Map',
+                        'Direction on Faculty Map',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -213,9 +220,7 @@ class _CabinScreenState extends State<CabinScreen> {
                     ),
                     Icon(
                       Icons.chevron_right,
-                      color: isDark
-                          ? Colors.grey[600]
-                          : Colors.grey[400],
+                      color: isDark ? Colors.grey[600] : Colors.grey[400],
                     ),
                   ],
                 ),
@@ -267,9 +272,7 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2C2C)
-            : const Color(0xFFF1F3F5),
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -332,9 +335,7 @@ class _CabinScreenState extends State<CabinScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(left: 4),
                     child: Icon(
-                      filled
-                          ? Icons.lightbulb
-                          : Icons.lightbulb_outline,
+                      filled ? Icons.lightbulb : Icons.lightbulb_outline,
                       size: 20,
                       color: filled ? bulbColor : Colors.grey[400],
                     ),
@@ -354,9 +355,7 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2C2C)
-            : const Color(0xFFF1F3F5),
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: GridView.count(
@@ -373,8 +372,7 @@ class _CabinScreenState extends State<CabinScreen> {
             builder: (context, snapshot) {
               final isOn = snapshot.data ?? false;
               return GestureDetector(
-                onTap: () =>
-                    _firebaseService.setLightChannel(channel, !isOn),
+                onTap: () => _firebaseService.setLightChannel(channel, !isOn),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -386,9 +384,7 @@ class _CabinScreenState extends State<CabinScreen> {
                         ? (isDark
                               ? const Color(0xFF1A3A2A)
                               : const Color(0xFFE6F4EC))
-                        : (isDark
-                              ? const Color(0xFF3A3A3A)
-                              : Colors.white),
+                        : (isDark ? const Color(0xFF3A3A3A) : Colors.white),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isOn ? Colors.green : Colors.transparent,
@@ -402,9 +398,7 @@ class _CabinScreenState extends State<CabinScreen> {
                         size: 18,
                         color: isOn
                             ? Colors.green
-                            : (isDark
-                                  ? Colors.grey[500]
-                                  : Colors.grey[500]),
+                            : (isDark ? Colors.grey[500] : Colors.grey[500]),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -459,9 +453,7 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2C2C)
-            : const Color(0xFFF1F3F5),
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -566,15 +558,27 @@ class _CabinScreenState extends State<CabinScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('16°C',
-                              style: TextStyle(
-                                  fontSize: 11, color: Colors.grey[500])),
-                          Text('23°C',
-                              style: TextStyle(
-                                  fontSize: 11, color: Colors.grey[500])),
-                          Text('30°C',
-                              style: TextStyle(
-                                  fontSize: 11, color: Colors.grey[500])),
+                          Text(
+                            '16°C',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                          Text(
+                            '23°C',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                          Text(
+                            '30°C',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[500],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -594,9 +598,7 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2C2C)
-            : const Color(0xFFF1F3F5),
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: StreamBuilder<bool>(
@@ -622,9 +624,7 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2C2C)
-            : const Color(0xFFF1F3F5),
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -647,7 +647,7 @@ class _CabinScreenState extends State<CabinScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Lecture Hall A',
+                  'Lecture Hall L106',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -657,7 +657,7 @@ class _CabinScreenState extends State<CabinScreen> {
                   ),
                 ),
                 Text(
-                  'Floor 2 · Faculty of Computing',
+                  'Floor 1 · Faculty of Computing',
                   style: TextStyle(fontSize: 13, color: Colors.grey[500]),
                 ),
               ],
@@ -688,9 +688,7 @@ class _CabinScreenState extends State<CabinScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF2C2C2C)
-            : const Color(0xFFF1F3F5),
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF1F3F5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -735,9 +733,7 @@ class _CabinScreenState extends State<CabinScreen> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: isDark
-                  ? const Color(0xFFE0E0E0)
-                  : const Color(0xFF1A1A1A),
+              color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1A1A1A),
             ),
           ),
         ],

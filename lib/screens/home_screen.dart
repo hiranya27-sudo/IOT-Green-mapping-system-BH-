@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           _buildMenuCard(
                             context,
-                            title: 'Cabin',
+                            title: 'Lecture Hall',
                             icon: Icons.meeting_room_outlined,
                             route: '/cabin',
                             isDark: isDark,

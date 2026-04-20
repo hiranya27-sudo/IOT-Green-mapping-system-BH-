@@ -147,7 +147,7 @@ class SmartFacultyApp extends StatelessWidget {
         '/about': (context) => const AboutScreen(),
         '/map': (context) => const FacultyMapScreen(),
         '/cabin': (context) => const CabinScreen(),
-        '/timetable': (context) => const TimeTableScreen(),
+        '/timetable': (context) => const TimetableScreen(),
         '/next_lecture': (context) => const NextLectureScreen(),
       },
     );
